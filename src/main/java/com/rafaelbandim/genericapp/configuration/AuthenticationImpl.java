@@ -18,7 +18,7 @@ public class AuthenticationImpl implements Authentication {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return this.user.getRoleList();
     }
 
     @Override

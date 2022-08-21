@@ -1,6 +1,7 @@
 package com.rafaelbandim.genericapp.entity;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -10,6 +11,10 @@ public class User {
     private long id;
     private String username;
     private String password;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinColumn
+    private List<Role> roleList;
 
     public long getId() {
         return id;
@@ -33,5 +38,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public List<Role> getRoleList() {
+        return roleList;
+    }
+
+    public void setRoleList(List<Role> roleList) {
+        this.roleList = roleList;
     }
 }
