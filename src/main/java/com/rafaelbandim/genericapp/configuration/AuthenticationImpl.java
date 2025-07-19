@@ -7,7 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import javax.security.auth.Subject;
 import java.util.Collection;
 
-public class AuthenticationImpl implements Authentication {
+public class     AuthenticationImpl implements Authentication {
 
     private final User user;
     private boolean authenticated;

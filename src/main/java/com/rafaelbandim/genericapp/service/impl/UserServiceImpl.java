@@ -1,33 +1,42 @@
 package com.rafaelbandim.genericapp.service.impl;
 
-import com.rafaelbandim.genericapp.configuration.AuthenticationImpl;
-import com.rafaelbandim.genericapp.entity.User;
 import com.rafaelbandim.genericapp.repository.UserRepository;
-import com.rafaelbandim.genericapp.service.UserService;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import jakarta.transaction.Transactional;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
-class UserServiceImpl implements UserService {
+class UserServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public void signIn(User user) {
-        User existentUser = userRepository.findByUsername(user.getUsername()).stream().findFirst().orElse(null);
-        if (existentUser == null || !passwordEncoder.matches(user.getPassword(), existentUser.getPassword())) {
-            throw new AuthenticationCredentialsNotFoundException("Bad credentials");
-        }
-        AuthenticationImpl authentication = new AuthenticationImpl(existentUser);
-        authentication.setAuthenticated(true);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+    @Transactional
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        com.rafaelbandim.genericapp.entity.User user = userRepository.findByUsername(username)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        List<GrantedAuthority> authorities = user.getRoleList().stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                .collect(Collectors.toList());
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                authorities
+        );
     }
 }
